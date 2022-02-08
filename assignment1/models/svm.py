@@ -55,6 +55,17 @@ class SVM:
             gradient[:, yi] -= sum
         return gradient
 
+    def create_mini_batches(self, X, y, batch_size):
+        mini_batches = []
+        n_minibatches = int(X.shape[0] / batch_size)
+        print(X.shape[0])
+    
+        for i in range(0, n_minibatches):
+            X_mini = X[i * batch_size: (i+1) * batch_size]
+            Y_mini = y[i * batch_size: (i+1) * batch_size]
+            mini_batches.append((X_mini, Y_mini))
+        return mini_batches
+
     def train(self, X_train: np.ndarray, y_train: np.ndarray):
         """Train the classifier.
 
@@ -65,11 +76,15 @@ class SVM:
                 N examples with D dimensions
             y_train: a numpy array of shape (N,) containing training labels
         """
+        mini_batches = self.create_mini_batches(X_train, y_train, 20)
+
         np.random.seed(0)
-        self.w = np.random.rand(X_train.shape[1], self.n_class)
+        self.w = np.random.rand(X_train.shape[1], self.n_class) # D
         for _ in range(0, self.epochs):
-            gradient = self.calc_gradient(X_train, y_train)
-            self.w += -self.lr * gradient
+            for batch in mini_batches:
+                x_mini, y_mini = batch
+                gradient = self.calc_gradient(x_mini, y_mini)
+                self.w += -self.lr * gradient
 
 
     def predict(self, X_test: np.ndarray) -> np.ndarray:
