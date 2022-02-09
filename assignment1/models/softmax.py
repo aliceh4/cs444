@@ -19,6 +19,13 @@ class Softmax:
         self.reg_const = reg_const
         self.n_class = n_class
 
+    def softmax(z):
+        exp = np.exp(z - np.max(z))
+
+        for i in range(len(z)):
+            exp[i] /= np.sum(exp[i])
+        return exp
+        
     def calc_gradient(self, X_train: np.ndarray, y_train: np.ndarray) -> np.ndarray:
         """Calculate gradient of the softmax loss.
 
@@ -34,8 +41,29 @@ class Softmax:
         Returns:
             gradient with respect to weights w; an array of same shape as w
         """
-        # TODO: implement me
-        return
+        gradient = np.zeros(self.w.shape) # set gradient equal to weight*constant
+        for xi, yi in zip(X_train, y_train):
+            wx = np.dot(xi, self.w) # (1, D) * (D * n_class) = 1 x n_class array
+            max = np.max(wx)
+            sum = np.sum(np.exp(wx) - max)
+
+            for c in range(0, self.n_class):
+                if c == yi:
+                    gradient[:,yi] += -xi + np.exp(wx[yi] - max) * xi / (sum)
+                if c != yi:
+                    gradient[:, c] += np.exp(wx[c] - max) * xi / (sum)
+
+        return gradient
+
+    def create_mini_batches(self, X, y, batch_size):
+        mini_batches = []
+        n_minibatches = int(X.shape[0] / batch_size)
+    
+        for i in range(0, n_minibatches):
+            X_mini = X[i * batch_size: (i+1) * batch_size]
+            Y_mini = y[i * batch_size: (i+1) * batch_size]
+            mini_batches.append((X_mini, Y_mini))
+        return mini_batches
 
     def train(self, X_train: np.ndarray, y_train: np.ndarray):
         """Train the classifier.
@@ -47,8 +75,21 @@ class Softmax:
                 N examples with D dimensions
             y_train: a numpy array of shape (N,) containing training labels
         """
-        # TODO: implement me
-        return
+        batch_size = 250
+        mini_batches = self.create_mini_batches(X_train, y_train, batch_size)
+
+        np.random.seed(0)
+        self.w = np.random.rand(X_train.shape[1], self.n_class) # (D x n_class) matrix
+        for e in range(0, self.epochs):
+            if e % 10 == 1:
+                # decay
+                self.lr = self.lr / 2
+
+            for batch in mini_batches:
+                x_mini, y_mini = batch
+                gradient = self.calc_gradient(x_mini, y_mini) / batch_size
+                self.w += -self.lr * gradient
+                    
 
     def predict(self, X_test: np.ndarray) -> np.ndarray:
         """Use the trained weights to predict labels for test data points.
@@ -62,5 +103,10 @@ class Softmax:
                 length N, where each element is an integer giving the predicted
                 class.
         """
-        # TODO: implement me
-        return
+        N = X_test.shape[0]
+        predicted = np.zeros(N)
+        for i in range(0, N): 
+            xi = X_test[i]
+            wx = np.dot(xi.T, self.w) # (1, D) * (D x 10)
+            predicted[i] = np.argmax(wx)
+        return predicted.astype(int)

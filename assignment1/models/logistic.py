@@ -39,14 +39,6 @@ class Logistic:
                 N examples with D dimensions
             y_train: a numpy array of shape (N,) containing training labels
         """
-        # Normalize x_train
-        # self.mean = X_train.mean(0, keepdims=True)
-        # self.std = X_train.std(0, keepdims=True)
-        # self.std += (self.std == 0.0) * 1e-15
-        # X_train = X_train.astype(np.float64)
-        # X_train -= self.mean
-        # X_train /= self.std
-
         np.random.seed(0)
         self.w = np.random.rand(X_train.shape[1]) # (D x 1) matrix
         for _ in range(0, self.epochs):
