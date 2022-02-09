@@ -1,6 +1,7 @@
 """Logistic regression model."""
 
 import numpy as np
+from pytz import NonExistentTimeError
 
 
 class Logistic:
@@ -25,8 +26,8 @@ class Logistic:
         Returns:
             the sigmoid of the input
         """
-        # TODO: implement me
-        return
+        sigmoid = 1 / (1 + np.exp(-z))
+        return sigmoid
 
     def train(self, X_train: np.ndarray, y_train: np.ndarray):
         """Train the classifier.
@@ -38,9 +39,24 @@ class Logistic:
                 N examples with D dimensions
             y_train: a numpy array of shape (N,) containing training labels
         """
-        # TODO: implement me
-        pass
+        # Normalize x_train
+        # self.mean = X_train.mean(0, keepdims=True)
+        # self.std = X_train.std(0, keepdims=True)
+        # self.std += (self.std == 0.0) * 1e-15
+        # X_train = X_train.astype(np.float64)
+        # X_train -= self.mean
+        # X_train /= self.std
 
+        np.random.seed(0)
+        self.w = np.random.rand(X_train.shape[1]) # (D x 1) matrix
+        for _ in range(0, self.epochs):
+            for xi, yi in zip(X_train, y_train):
+                if yi == 0:
+                    yi = -1
+                
+                wx = np.dot(xi, self.w) # (1 x D) * (D x 1) = (1 x 1)
+                self.w = self.w + self.lr * self.sigmoid(-yi * wx) * yi * xi
+                
     def predict(self, X_test: np.ndarray) -> np.ndarray:
         """Use the trained weights to predict labels for test data points.
 
@@ -53,5 +69,15 @@ class Logistic:
                 length N, where each element is an integer giving the predicted
                 class.
         """
-        # TODO: implement me
-        return
+        N = X_test.shape[0]
+        predicted = np.zeros(N)
+        i = 0
+        for xi in X_test:
+            predicted_prob = np.dot(xi, self.w) # (1 x 22) * (22 x 1)
+            if predicted_prob > 0:
+                predicted[i] = 1
+            else:
+                predicted[i] = 0
+            i += 1
+        return predicted
+

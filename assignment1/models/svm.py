@@ -35,9 +35,7 @@ class SVM:
             the gradient with respect to weights w; an array of the same shape
                 as w
         """
-        # weight: D x class array
-        n = X_train.shape[0]
-        gradient = self.reg_const / n * self.w # set gradient equal to weight*constant
+        gradient = self.reg_const * self.w # set gradient equal to weight*constant
         for xi, yi in zip(X_train, y_train):
             wx = np.dot(xi, self.w) # (1, D) * (D * n_class) = 1 x n_class array
             sum = 0
@@ -58,7 +56,6 @@ class SVM:
     def create_mini_batches(self, X, y, batch_size):
         mini_batches = []
         n_minibatches = int(X.shape[0] / batch_size)
-        print(X.shape[0])
     
         for i in range(0, n_minibatches):
             X_mini = X[i * batch_size: (i+1) * batch_size]
@@ -76,14 +73,19 @@ class SVM:
                 N examples with D dimensions
             y_train: a numpy array of shape (N,) containing training labels
         """
-        mini_batches = self.create_mini_batches(X_train, y_train, 20)
+        batch_size = 250
+        mini_batches = self.create_mini_batches(X_train, y_train, batch_size)
 
         np.random.seed(0)
-        self.w = np.random.rand(X_train.shape[1], self.n_class) # D
-        for _ in range(0, self.epochs):
+        self.w = np.random.rand(X_train.shape[1], self.n_class) # (D x n_class) matrix
+        for e in range(0, self.epochs):
+            if e % 10 == 1:
+                # decay
+                self.lr = self.lr / 2
+
             for batch in mini_batches:
                 x_mini, y_mini = batch
-                gradient = self.calc_gradient(x_mini, y_mini)
+                gradient = self.calc_gradient(x_mini, y_mini) / batch_size
                 self.w += -self.lr * gradient
 
 
