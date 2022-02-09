@@ -18,13 +18,6 @@ class Softmax:
         self.epochs = epochs
         self.reg_const = reg_const
         self.n_class = n_class
-
-    def softmax(z):
-        exp = np.exp(z - np.max(z))
-
-        for i in range(len(z)):
-            exp[i] /= np.sum(exp[i])
-        return exp
         
     def calc_gradient(self, X_train: np.ndarray, y_train: np.ndarray) -> np.ndarray:
         """Calculate gradient of the softmax loss.
@@ -45,13 +38,14 @@ class Softmax:
         for xi, yi in zip(X_train, y_train):
             wx = np.dot(xi, self.w) # (1, D) * (D * n_class) = 1 x n_class array
             max = np.max(wx)
-            sum = np.sum(np.exp(wx) - max)
+            wx_exp = np.exp(wx - max)
+            sum = np.sum(wx_exp)
+            gradient[:,yi] += -xi + wx_exp[yi] * xi / (sum)
+
 
             for c in range(0, self.n_class):
-                if c == yi:
-                    gradient[:,yi] += -xi + np.exp(wx[yi] - max) * xi / (sum)
                 if c != yi:
-                    gradient[:, c] += np.exp(wx[c] - max) * xi / (sum)
+                    gradient[:, c] += wx_exp[c] * xi / (sum)
 
         return gradient
 
@@ -84,7 +78,7 @@ class Softmax:
             if e % 10 == 1:
                 # decay
                 self.lr = self.lr / 2
-
+            print(e)
             for batch in mini_batches:
                 x_mini, y_mini = batch
                 gradient = self.calc_gradient(x_mini, y_mini) / batch_size
