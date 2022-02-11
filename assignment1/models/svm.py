@@ -74,16 +74,13 @@ class SVM:
                 N examples with D dimensions
             y_train: a numpy array of shape (N,) containing training labels
         """
-        batch_size = 250
+        batch_size = 512
         mini_batches = self.create_mini_batches(X_train, y_train, batch_size)
 
         np.random.seed(0)
         self.w = np.random.rand(X_train.shape[1], self.n_class) # (D x n_class) matrix
         for e in range(0, self.epochs):
-            if e % 10 == 1:
-                # decay
-                self.lr = self.lr / 2
-
+            self.lr = self.lr * np.exp(-0.55*e)
             for batch in mini_batches:
                 x_mini, y_mini = batch
                 gradient = self.calc_gradient(x_mini, y_mini) # / batch_size
