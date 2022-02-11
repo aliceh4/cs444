@@ -51,6 +51,7 @@ class SVM:
                     sum += xi
 
             gradient[:, yi] -= sum
+        gradient /= X_train.shape[0]
         return gradient
 
     def create_mini_batches(self, X, y, batch_size):
@@ -85,7 +86,7 @@ class SVM:
 
             for batch in mini_batches:
                 x_mini, y_mini = batch
-                gradient = self.calc_gradient(x_mini, y_mini) / batch_size
+                gradient = self.calc_gradient(x_mini, y_mini) # / batch_size
                 self.w += -self.lr * gradient
 
 

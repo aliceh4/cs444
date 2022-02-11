@@ -78,7 +78,6 @@ class Softmax:
             if e % 10 == 1:
                 # decay
                 self.lr = self.lr / 2
-            print(e)
             for batch in mini_batches:
                 x_mini, y_mini = batch
                 gradient = self.calc_gradient(x_mini, y_mini) / batch_size

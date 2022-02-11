@@ -31,16 +31,16 @@ class Perceptron:
         """
         np.random.seed(0)
         self.w = np.random.rand(X_train.shape[1], self.n_class)
-        for _ in range(0, self.epochs):
+
+        for e in range(0, self.epochs):
+
             # iterate through each training sample
             for xi, yi in zip(X_train, y_train):
                 wx = np.dot(xi, self.w) # (1 x D) * (D x 10)
-                weight_actual = wx[yi]
 
                 # loop through each class
                 for c in range(0, self.n_class):
-                    # if our incorrect class argument is higher than the actual class argument 
-                    if wx[c] > weight_actual:
+                    if wx[c] > wx[yi]:
                         self.w[:,yi] = self.w[:,yi] + self.lr * xi
                         self.w[:,c] = self.w[:,c] - self.lr * xi
         
