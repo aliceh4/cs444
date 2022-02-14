@@ -65,8 +65,8 @@ class Logistic:
         predicted = np.zeros(N)
         i = 0
         for xi in X_test:
-            predicted_prob = np.dot(xi, self.w) # (1 x 22) * (22 x 1)
-            if predicted_prob > 0.5:
+            predicted_prob = self.sigmoid(np.dot(xi, self.w)) # (1 x 22) * (22 x 1)
+            if predicted_prob > self.threshold:
                 predicted[i] = 1
             else:
                 predicted[i] = 0
