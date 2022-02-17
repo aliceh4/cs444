@@ -55,14 +55,14 @@ class NeuralNetwork:
     def linear(self, W: np.ndarray, X: np.ndarray, b: np.ndarray) -> np.ndarray:
         """Fully connected (linear) layer.
         Parameters:
-            W: the weight matrix
-            X: the input data
+            W: the weight matrix -- M x N
+            X: the input data -- 1 x M
             b: the bias
         Returns:
             the output
         """
         # TODO: implement me
-        return
+        return np.dot(X, W) + b
 
     def relu(self, X: np.ndarray) -> np.ndarray:
         """Rectified Linear Unit (ReLU).
@@ -71,8 +71,8 @@ class NeuralNetwork:
         Returns:
             the output
         """
-        # TODO: implement me
-        return
+        return X.clip(0)
+
 
     def relu_grad(self, X: np.ndarray) -> np.ndarray:
         """Gradient of Rectified Linear Unit (ReLU).
@@ -81,8 +81,8 @@ class NeuralNetwork:
         Returns:
             the output data
         """
-        # TODO: implement me
-        return
+        grad = X > 0
+        return grad.astype(float)
 
     def softmax(self, X: np.ndarray) -> np.ndarray:
         """The softmax function.
@@ -92,7 +92,8 @@ class NeuralNetwork:
             the output
         """
         # TODO: implement me
-        return
+        ex = np.exp(X - np.max(X))
+        return ex / np.sum(ex)
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """Compute the scores for each class for all of the data samples.
@@ -104,12 +105,37 @@ class NeuralNetwork:
             Matrix of shape (N, C) where scores[i, c] is the score for class
                 c on input X[i] outputted from the last layer of your network
         """
-        self.outputs = {}
         # TODO: implement me. You'll want to store the output of each layer in
         # self.outputs as it will be used during back-propagation. You can use
         # the same keys as self.params. You can use functions like
         # self.linear, self.relu, and self.softmax in here.
-        return
+        self.outputs = {}
+        (N, _) = X.shape
+        output = np.zeros((N, self.output_size))
+
+        # loop through each training sample
+        for i in range(0, N):
+
+            input = X[i]
+            
+            # iterate through each layer
+            for l in range(0, self.num_layers):
+
+                # perform forward pass linear
+                W = self.params["W" + str(i)]
+                b = self.params["b" + str(i)]
+                y = self.linear(W, input, b)
+
+                # activation
+                a = self.relu(y)
+                self.outputs["W" + str(i)] = a
+                input = a
+            
+            # convert to probabilities
+            output[i] = self.softmax(input)
+
+        return output
+        
 
     def backward(self, y: np.ndarray, reg: float = 0.0) -> float:
         """Perform back-propagation and compute the gradients and losses.
