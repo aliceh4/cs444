@@ -94,6 +94,36 @@ class NeuralNetwork:
         # TODO: implement me
         ex = np.exp(X - np.max(X))
         return ex / np.sum(ex)
+    
+    def softmax_grad(self, X_train: np.ndarray, y_train: np.ndarray) -> np.ndarray:
+        """Calculate gradient of the softmax loss.
+
+        Inputs have dimension D, there are C classes, and we operate on
+        mini-batches of N examples.
+
+        Parameters:
+            X_train: a numpy array of shape (N, D) containing a mini-batch
+                of data
+            y_train: a numpy array of shape (N,) containing training labels;
+                y[i] = c means that X[i] has label c, where 0 <= c < C
+
+        Returns:
+            gradient with respect to weights w; an array of same shape as w
+        """
+        gradient = np.zeros(self.w.shape) # set gradient equal to weight*constant
+        for xi, yi in zip(X_train, y_train):
+            wx = np.dot(xi, self.w) # (1, D) * (D * n_class) = 1 x n_class array
+            max = np.max(wx)
+            wx_exp = np.exp(wx - max)
+            sum = np.sum(wx_exp)
+            gradient[:,yi] += -xi + wx_exp[yi] * xi / (sum)
+
+
+            for c in range(0, self.n_class):
+                if c != yi:
+                    gradient[:, c] += wx_exp[c] * xi / (sum)
+
+        return gradient
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         """Compute the scores for each class for all of the data samples.
@@ -119,21 +149,26 @@ class NeuralNetwork:
             input = X[i]
             
             # iterate through each layer
-            for l in range(0, self.num_layers):
+            for l in range(1, self.num_layers + 1):
 
                 # perform forward pass linear
-                W = self.params["W" + str(i)]
-                b = self.params["b" + str(i)]
+                W = self.params["W" + str(l)]
+                b = self.params["b" + str(l)]
                 y = self.linear(W, input, b)
 
                 # activation
-                a = self.relu(y)
-                self.outputs["W" + str(i)] = a
+                if l < self.num_layers:
+                    a = self.relu(y)
+                else:
+                    a = y
+                    
+                self.outputs[str(l) + str(i)] = a
                 input = a
             
             # convert to probabilities
             output[i] = self.softmax(input)
-
+            # Doing relu before last softmax might change gradient
+            self.outputs[str("final") + str(i)] = output[i]
         return output
         
 
@@ -148,12 +183,23 @@ class NeuralNetwork:
             Total loss for this batch of training samples
         """
         self.gradients = {}
+        loss = 0
+
+        for i in range(y.shape[0]):
+            # calculate gradient of loss with respect to final layer
+            # (this is our upstream gradient)
+            last_input = self.outputs[str(self.num_layers - 1) + str(i)]
+            last_softmax = self.outputs[str("final") + str(i)]
+            grad_w2 =  last_softmax * last_input 
+            grad_w2[y[i]] = (last_softmax[y[i]]-1)*last_input
+            print(grad_w2.shape)
+        
         # TODO: implement me. You'll want to store the gradient of each
         # parameter in self.gradients as it will be used when updating each
         # parameter and during numerical gradient checks. You can use the same
         # keys as self.params. You can add functions like self.linear_grad,
         # self.relu_grad, and self.softmax_grad if it helps organize your code.
-        return
+        return loss
 
     def update(
         self,
